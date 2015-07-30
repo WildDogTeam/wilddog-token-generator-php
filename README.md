@@ -63,15 +63,13 @@ $generator = new TokenGenerator('<YOUR_WILDDOG_SECRET>');
 // Using setOption()
 $token = $generator
     ->setOption('admin', true)
-    ->setOption('debug', true)
     ->setData(array('uid' => 'exampleID'))
     ->create();
 
 // Using setOptions()
 $token = $generator
     ->setOptions(array(
-        'admin' => true,
-        'debug' => true
+        'admin' => true
     ))
     ->setData(array('uid' => 'exampleID'))
     ->create();
