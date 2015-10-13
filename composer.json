@@ -1,0 +1,17 @@
+{
+    "name": "wilddog/token",
+    "description": "Wilddog token generator for PHP.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wilddog",
+            "homepage": "https://www.wilddog.com/"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Wilddog\\Token\\": "src/"
+        }
+    }
+}
