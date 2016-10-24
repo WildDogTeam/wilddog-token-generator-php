@@ -6,6 +6,6 @@
  */
 namespace Wilddog\Token;
 
-class TokenException extends \Exception
+class CustomTokenException extends \Exception
 {
 }

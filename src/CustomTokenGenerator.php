@@ -11,11 +11,13 @@ require dirname(__FILE__) . '/JWT.php';
 /**
  * 为wilddog应用生成用于认证用户的token。
  */
-class TokenGenerator
+class CustomTokenGenerator
 {
     // 字节为单位
-    const MAX_UID_SIZE   = 256;
+    const MAX_UID_SIZE   = 64;
     const MAX_TOKEN_SIZE = 1024;
+
+    const uidReg = "/[A-Za-z0-9:-]*/";
 
     /**
      * token数据.
@@ -42,12 +44,12 @@ class TokenGenerator
      *
      * @param string $secret Wilddog超级密钥。
      *
-     * @throws TokenException 超级密钥不合法时抛出。
+     * @throws CustomTokenException 超级密钥不合法时抛出。
      */
     public function __construct($secret)
     {
         if (!is_string($secret)) {
-            throw new TokenException(
+            throw new CustomTokenException(
                 sprintf('The Wilddog secret must be a string, %s given.', gettype($secret))
             );
         }
@@ -58,7 +60,7 @@ class TokenGenerator
         $this->options = [
             'admin'     => false,
             'debug'     => false,
-            'expires'   => null,
+            'expires'   => 1477280669,
             'notBefore' => null,
         ];
     }
@@ -83,7 +85,7 @@ class TokenGenerator
      *
      * @param array $options
      *
-     * @throws TokenException
+     * @throws CustomTokenException
      *
      * @return static
      */
@@ -101,32 +103,36 @@ class TokenGenerator
      * @param string $name  参数名。
      * @param mixed  $value 参数值。
      *
-     * @throws TokenException
+     * @throws CustomTokenException
      *
      * @return static
      */
     public function setOption($name, $value)
     {
+
+        $this->options[$name] = $value;
         if (!array_key_exists($name, $this->options)) {
-            throw new TokenException(
+            throw new CustomTokenException(
                 sprintf(
                     'Unsupported option "%s". Valid options are: ', $name, implode(', ', array_keys($this->options))
                 )
             );
         }
+
         switch ($name) {
             case 'admin':
             case 'debug':
                 if (!is_bool($value)) {
-                    throw new TokenException(
+                    throw new CustomTokenException(
                         sprintf('Invalid option "%s". Expected %s, but %s given', $name, 'bool', gettype($value))
                     );
                 }
                 break;
             case 'expires':
+                break;
             case 'notBefore':
                 if (!is_int($value) && !($value instanceof \DateTime)) {
-                    throw new TokenException(
+                    throw new CustomTokenException(
                         sprintf(
                             'Invalid option "%s". Expected %s, but %s given',
                             $name, 'int or DateTime', gettype($value)
@@ -134,10 +140,11 @@ class TokenGenerator
                     );
                 }
                 if (is_int($value)) {
-                    $value = \DateTime::createFromFormat('U', $value);
+                    $value = \DateTime::createFromFormat('UTC', $value);
                 }
                 break;
         }
+
         $this->options[$name] = $value;
         return $this;
     }
@@ -145,7 +152,7 @@ class TokenGenerator
     /**
      * 生成token。
      *
-     * @throws TokenException
+     * @throws CustomTokenException
      *
      * @return string JWT token.
      */
@@ -153,16 +160,20 @@ class TokenGenerator
     {
         $this->validate();
         $claims        = $this->processOptions();
-        $claims['d']   = $this->data;
-        $claims['v']   = 0;
+        $claims['uid'] = $this->data['uid'];
+        unset($this->data['uid']);
+        if (count($this->data)!=0) {
+            $claims['claims']   = $this->data;
+        }
+        $claims['v']   = 1;
         $claims['iat'] = time();
         try {
             $token = JWT::encode($claims, $this->secret, 'HS256');
         } catch (\Exception $e) {
-            throw new TokenException($e->getMessage(), null, $e);
+            throw new CustomTokenException($e->getMessage(), null, $e);
         }
         if (($tokenSize = mb_strlen($token, '8bit')) > static::MAX_TOKEN_SIZE) {
-            throw new TokenException(
+            throw new CustomTokenException(
                 sprintf('The generated token is larger than %d bytes (%d)', static::MAX_TOKEN_SIZE, $tokenSize)
             );
         }
@@ -180,11 +191,15 @@ class TokenGenerator
                 case 'expires':
                     if ($value instanceof \DateTime) {
                         $claims['exp'] = $value->getTimestamp();
+                    } elseif(is_int($value)) {
+                        $claims['exp'] = $value;
                     }
                     break;
                 case 'notBefore':
                     if ($value instanceof \DateTime) {
                         $claims['nbf'] = $value->getTimestamp();
+                    }elseif(is_int($value)) {
+                        $claims['nbf'] = $value;
                     }
                     break;
                 default:
@@ -198,12 +213,12 @@ class TokenGenerator
     /**
      * 检查token数据和options合法性。 token数据必须包含uid字段，除非option中admin为true。
      *
-     * @throws TokenException
+     * @throws CustomTokenException
      */
     private function validate()
     {
         if (false === $this->options['admin'] && !array_key_exists('uid', $this->data)) {
-            throw new TokenException('No uid provided in data and admin option not set.');
+            throw new CustomTokenException('No uid provided in data and admin option not set.');
         }
         if (array_key_exists('uid', $this->data)) {
             $this->validateUid($this->data['uid']);
@@ -211,25 +226,35 @@ class TokenGenerator
     }
 
     /**
-     * 校验uid
+     * 校验uid 其中uid为不大于64位的大小写字母和数字组成
      *
      * @param string $uid
      *
-     * @throws TokenException
+     * @throws CustomTokenException
      */
     private function validateUid($uid)
     {
         if (!is_string($uid)) {
-            throw new TokenException(sprintf('The uid must be a string, %s given.', gettype($uid)));
+            throw new CustomTokenException(sprintf('The uid must be a string, %s given.', gettype($uid)));
         }
+        $matches = array();
+        preg_match(static::uidReg, $uid, $matches);
+        if (0 === count($matches)) {
+            throw new CustomTokenException(sprintf('The uid must be the letter, number, or the combination of letter and number'));
+        }
+        if ($matches[0] != $uid) {
+            throw new CustomTokenException(sprintf('The uid must be the letter, number, or the combination of letter and number'));
+        }
+
         $uidSize = mb_strlen($uid, '8bit');
         if ($uidSize > static::MAX_UID_SIZE) {
-            throw new TokenException(
+            throw new CustomTokenException(
                 sprintf('The provided uid is longer than %d bytes (%d).', static::MAX_UID_SIZE, $uidSize)
             );
         }
         if (0 === $uidSize) {
-            throw new TokenException('The provided uid is empty.');
+            throw new CustomTokenException('The provided uid is empty.');
         }
     }
+
 }

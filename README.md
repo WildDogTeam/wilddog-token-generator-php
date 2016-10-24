@@ -1,6 +1,7 @@
 # Wilddog Token Generator - PHP
 
 Wilddog允许用户使用自定义Token进行终端用户认证。Token采用的是安全的JSON Web Token(JWT)格式。
+本版本生成器为Wilddog Auth2.0对应token生成器
 
 
 ## 依赖
@@ -22,11 +23,11 @@ Wilddog Token Generator for php 需要运行在php 5.4或更高版本上。
 示例代码：
 
 ```php
-use Wilddog\Token\TokenException;
-use Wilddog\Token\TokenGenerator;
+use Wilddog\Token\CustomTokenException;
+use Wilddog\Token\CustomTokenGenerator;
 
 try {
-    $generator = new TokenGenerator('<YOUR_WILDDOG_SECRET>');
+    $generator = new CustomTokenGenerator('<YOUR_WILDDOG_SECRET>');
     $token = $generator
         ->setData(array('uid' => 'exampleID'))
         ->create();
@@ -56,9 +57,9 @@ admin权限的客户端拥有对所有数据的读写权限。
 下面是设置options的示例代码:
 
 ```php
-use Wilddog\Token\TokenGenerator;
+use Wilddog\Token\CustomTokenGenerator;
 
-$generator = new TokenGenerator('<YOUR_WILDDOG_SECRET>');
+$generator = new CustomTokenGenerator('<YOUR_WILDDOG_SECRET>');
 
 // Using setOption()
 $token = $generator
@@ -78,5 +79,5 @@ $token = $generator
 
 ## Changelog
 
-#### 1.0.0 - 2015-07-28
+#### 2.0.0 - 2016-10-24
 - Initial release
