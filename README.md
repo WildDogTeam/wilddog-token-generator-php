@@ -1,7 +1,8 @@
 # Wilddog Token Generator - PHP
 
 Wilddog允许用户使用自定义Token进行终端用户认证。Token采用的是安全的JSON Web Token(JWT)格式。
-本版本生成器为Wilddog Auth2.0对应token生成器
+
+本版本生成器为Wilddog Auth2.0对应token生成器。
 
 
 ## 依赖
@@ -31,14 +32,15 @@ try {
     $token = $generator
         ->setData(array('uid' => 'exampleID'))
         ->create();
-} catch (TokenException $e) {
+} catch (CustomTokenException $e) {
     echo "Error: ".$e->getMessage();
 }
 
 echo $token;
 ```
 
-setData()函数设置token的payload部分。payload必须含有"uid"字段。uid字段必须是字符串类型，长度小于256字节。
+setData()函数设置token的payload部分。payload必须含有"uid"字段，payload中其他字段都属于自定义字段。uid字段必须是字符串类型，长度小于256字节。
+
 最终生成的token必须小于1024字节。
 
 
