@@ -39,7 +39,7 @@ try {
 echo $token;
 ```
 
-setData()函数设置token的payload部分。payload必须含有"uid"字段，payload中其他字段都属于自定义字段。uid字段必须是字符串类型，长度小于256字节。
+setData()函数设置token的payload部分。payload必须含有"uid"字段，payload中其他字段都属于自定义字段。uid字段必须是字符串类型，长度小于64字节，且必须为大小写字母，数字及'-'的组合。
 
 最终生成的token必须小于1024字节。
 
