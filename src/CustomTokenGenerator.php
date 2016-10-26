@@ -60,7 +60,7 @@ class CustomTokenGenerator
         $this->options = [
             'admin'     => false,
             'debug'     => false,
-            'expires'   => 1477280669,
+            'expires'   => null,
             'notBefore' => null,
         ];
     }
