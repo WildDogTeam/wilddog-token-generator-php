@@ -1,7 +1,7 @@
 # Wilddog Token Generator - PHP
 
 Wilddog允许用户使用自定义Token进行终端用户认证。Token采用的是安全的JSON Web Token(JWT)格式。
-注意：本分支只支持Wilddog Auth1.0版本API 不支持Wilddog Auth2.0版本API
+注意：本分支只支持Wilddog Auth1.0版本API 不支持Wilddog Auth2.0版本API。
 
 
 ## 依赖
