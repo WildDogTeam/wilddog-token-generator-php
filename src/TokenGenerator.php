@@ -60,6 +60,7 @@ class TokenGenerator
             'debug'     => false,
             'expires'   => null,
             'notBefore' => null,
+            'uid' => null,
         ];
     }
 
@@ -137,6 +138,7 @@ class TokenGenerator
                     $value = \DateTime::createFromFormat('U', $value);
                 }
                 break;
+
         }
         $this->options[$name] = $value;
         return $this;
@@ -153,9 +155,14 @@ class TokenGenerator
     {
         $this->validate();
         $claims        = $this->processOptions();
-        $claims['d']   = $this->data;
-        $claims['v']   = 0;
+        $claims['claims']   = $this->data;
+        $claims['v']   = 1;
         $claims['iat'] = time();
+
+        foreach ($this->options as $name => $value) {
+            unset($this->data[$name]);
+        }
+
         try {
             $token = JWT::encode($claims, $this->secret, 'HS256');
         } catch (\Exception $e) {
@@ -196,17 +203,18 @@ class TokenGenerator
     }
 
     /**
-     * 检查token数据和options合法性。 token数据必须包含uid字段，除非option中admin为true。
+     * 检查token数据和options合法性。 options数据必须包含uid字段，除非option中admin为true。
      *
      * @throws TokenException
      */
     private function validate()
     {
-        if (false === $this->options['admin'] && !array_key_exists('uid', $this->data)) {
+        if (false === $this->options['admin'] &&
+            (!array_key_exists('uid', $this->options) || null === $this->options['uid'])) {
             throw new TokenException('No uid provided in data and admin option not set.');
         }
-        if (array_key_exists('uid', $this->data)) {
-            $this->validateUid($this->data['uid']);
+        if (array_key_exists('uid', $this->options)) {
+            $this->validateUid($this->options['uid']);
         }
     }
 
