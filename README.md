@@ -24,6 +24,8 @@ Wilddog Token Generator for php 需要运行在php 5.4或更高版本上。
 示例代码：
 
 ```php
+include "CustomTokenException.php";
+include "CustomTokenGenerator.php";
 use Wilddog\Token\CustomTokenException;
 use Wilddog\Token\CustomTokenGenerator;
 
